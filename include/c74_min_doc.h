@@ -107,6 +107,16 @@ inline std::string doc_format(const std::string& input)
     return str::join(tokens);
 }
 
+// The digest is the first sentence of a description: up to ". ", else up to the first ".".
+
+inline std::string doc_digest(const std::string& description)
+{
+    auto end = description.find(". ");
+    if (end == std::string::npos)
+        end = description.find('.');
+    return description.substr(0, end);
+}
+
 template <class min_class_type>
 typename enable_if<has_class_description<min_class_type>::value>::type doc_get_description(std::string& returned_description)
 {
@@ -162,22 +172,11 @@ void doc_generate(const min_class_type& instance, const std::string& refpage_ful
 
     // desc
 
-    const size_t digest_length_max = 256;
-    char digest[digest_length_max];
     string class_description;
 
     doc_get_description<min_class_type>(class_description);
-    strncpy(digest, class_description.c_str(), digest_length_max);
 
-    char* c = strstr(digest, ". ");
-    if (!c) {
-        c = strchr(digest, '.');
-    }
-    if (c) {
-        *c = 0;
-    }
-
-    refpage_file << "	<digest>" << digest << "</digest>" << endl;
+    refpage_file << "	<digest>" << doc_digest(class_description) << "</digest>" << endl;
     refpage_file << "	<description>" << class_description << "</description>" << endl;
     refpage_file << endl
                  << endl;
@@ -212,15 +211,6 @@ void doc_generate(const min_class_type& instance, const std::string& refpage_ful
         const auto& type = arg->type();
         bool required = arg->required();
 
-        strncpy(digest, description.c_str(), digest_length_max);
-        char* c = strstr(digest, ". ");
-        if (!c) {
-            c = strchr(digest, '.');
-        }
-        if (c) {
-            *c = 0;
-        }
-
         refpage_file << "		<objarg name='" << arg->name() << "'";
         if (required) {
             refpage_file << " optional='0'";
@@ -232,7 +222,7 @@ void doc_generate(const min_class_type& instance, const std::string& refpage_ful
             refpage_file << " type='" << type << "'";
         }
         refpage_file << ">" << endl;
-        refpage_file << "			<digest>" << digest << "</digest>" << endl;
+        refpage_file << "			<digest>" << doc_digest(description) << "</digest>" << endl;
         refpage_file << "			<description>" << description << "</description>" << endl;
         refpage_file << "		</objarg>" << endl
                      << endl;
@@ -256,17 +246,8 @@ void doc_generate(const min_class_type& instance, const std::string& refpage_ful
         if (message_object.type() != max::A_CANT) {
             const auto& description = doc_format(message_object.description_string());
 
-            strncpy(digest, description.c_str(), digest_length_max);
-            char* c = strstr(digest, ". ");
-            if (!c) {
-                c = strchr(digest, '.');
-            }
-            if (c) {
-                *c = 0;
-            }
-
             refpage_file << "		<method name='" << message_object.name() << "'>" << endl;
-            refpage_file << "			<digest>" << digest << "</digest>" << endl;
+            refpage_file << "			<digest>" << doc_digest(description) << "</digest>" << endl;
             refpage_file << "			<description>" << description << "</description>" << endl;
             refpage_file << "		</method>" << endl
                          << endl;
@@ -303,17 +284,8 @@ void doc_generate(const min_class_type& instance, const std::string& refpage_ful
                     continue;
                 }
 
-                strncpy(digest, description.c_str(), digest_length_max);
-                char* c = strstr(digest, ". ");
-                if (!c) {
-                    c = strchr(digest, '.');
-                }
-                if (c) {
-                    *c = 0;
-                }
-
                 refpage_file << "		<attribute name='" << attr_object.name() << "' get='1' set='" << attr_object.writable() << "' type='" << attr_type << "' size='1' >" << endl;
-                refpage_file << "			<digest>" << digest << "</digest>" << endl;
+                refpage_file << "			<digest>" << doc_digest(description) << "</digest>" << endl;
                 refpage_file << "			<description>" << description << "</description>" << endl;
                 refpage_file << "		</attribute>" << endl
                              << endl;
