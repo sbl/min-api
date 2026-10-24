@@ -85,6 +85,18 @@ class message_base
     }
 
   public:
+    // Remove the message from the owner's pile. The owner's members are
+    // destroyed before its object_base, and Max can still deliver a message
+    // in between (a 'notify' when a buffer_reference member frees its
+    // reference); the wrapper then finds no entry instead of a dead message.
+    virtual ~message_base()
+    {
+        auto& messages = m_owner->messages();
+        auto found = messages.find(std::string(m_name));
+        if (found != messages.end() && found->second == this)
+            messages.erase(found);
+    }
+
     // All messages must define what happens when you call them.
     virtual atoms operator()(const atoms& args = {}, const int inlet = -1) = 0;
     virtual atoms operator()(const atom arg, const int inlet = -1) = 0;
